@@ -1,0 +1,30 @@
+{
+  "title": "Shaolin vs Wutang Legends × Ultra Street Fighter IV",
+  "status": "design-and-feasibility",
+  "primary_game": "Shaolin vs Wutang Legends",
+  "companion_game": "Ultra Street Fighter IV",
+  "mode": "cross-game-duels; both games should run together and each should handle its own combat",
+  "scope_order": [
+    "verify both games and supported modding workflow",
+    "prove a minimal single-player integration",
+    "consider multiplayer only after the single-player slice is tested"
+  ],
+  "must_preserve": [
+    "genuine fighters and fighting styles from Ultra Street Fighter IV",
+    "Shaolin vs Wutang Legends as the primary game",
+    "each game's own combat handling"
+  ],
+  "constraints": [
+    "Do not distribute proprietary game binaries or extracted assets.",
+    "Use installed game files only where permitted by the games' terms and Melty's workflow.",
+    "Do not substitute the HTML prototype for the requested mashup.",
+    "Do not claim integration until tested in Melty with both games."
+  ],
+  "release_gates": [
+    "Melty workflow and exact game versions verified",
+    "Technical feasibility report approved",
+    "Minimal single-player cross-game duel tested with both games",
+    "Rollback and build instructions documented",
+    "Release format verified against current Melty requirements"
+  ]
+}
