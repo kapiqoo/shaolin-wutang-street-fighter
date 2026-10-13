@@ -1,36 +1,26 @@
-# Shaolin vs Wutang: Crossover Arena
+# Shaolin vs Wutang Legends × Ultra Street Fighter IV — Makoto experiment
 
-A small, standalone browser fighting-game prototype for experimenting with a Shaolin-versus-Wutang crossover concept.
+**Status: feasibility investigation only. Not a playable real-game mod. Do not import or publish this repository as the requested Melty mashup yet.**
 
-## Play it locally
-1. Download or clone this repository.
-2. Open `index.html` in a modern desktop browser.
-3. Click **Start Fight**.
+## Target experiment
+- **Primary game:** Shaolin vs Wutang Legends
+- **Fighter source:** Ultra Street Fighter IV
+- **First fighter:** Makoto
+- **Combat direction:** faithful karate, forward dash, strong close-range strikes, and recognizable special attacks wherever the primary game's actual engine supports them
+- **First milestone:** a local-only single-player proof of concept, tested in the installed primary game
+- **Multiplayer:** deferred until the single-player integration is proven
 
-No build step, package manager, or external assets are required.
+## Current contents
+This repository still contains an earlier standalone browser prototype in `index.html`. It uses original placeholder canvas graphics and browser-based combat. It does **not** load either installed game, import Makoto, or alter either game's combat. It is not the requested crossover mod and must not be presented as its gameplay or submitted as the finished Melty project.
 
-## Controls
-### Player 1 — Shaolin
-- **A / D** — move left / right
-- **W** — jump
-- **F** — quick strike
-- **G** — heavy strike
-- **S** — guard
+## Feasibility report
+See [docs/FEASIBILITY.md](docs/FEASIBILITY.md) for the current evidence, unknowns, and required local verification steps. The existence of Unity data files in the primary game does not by itself prove that its character roster or combat can be extended.
 
-### Player 2 — Wutang
-- **Left / Right arrows** — move
-- **Up arrow** — jump
-- **K** — quick strike
-- **L** — heavy strike
-- **Down arrow** — guard
+## Release policy
+- Do not mark this project playable until the real primary game has launched with a verified Makoto-related integration.
+- Do not include either commercial game's executables or extracted game assets in the upload.
+- The mod must read content from the player's own installed games where legally and technically possible.
+- Do not publish until a real gameplay screenshot, package validation, and the required Melty test are complete.
 
-Use **CPU Opponent: ON/OFF** to switch between fighting the computer and two-player mode. Restart Round resets the match; Pause pauses it.
-
-## Prototype notes
-- The game is a single HTML file with embedded CSS, JavaScript, and canvas graphics.
-- Fighter art and the arena are original placeholder illustrations made from canvas shapes.
-- This is an independent fan-made prototype, not an official release and not affiliated with any existing game or franchise.
-- It does not bundle commercial game assets, source code, or executable files from other games.
-
-## Melty.gg import note
-This repository now contains a playable browser prototype in `index.html`. If an importer requires a GitHub Release asset, a repository URL alone may not be enough; follow the importer's accepted package format and attach the required ZIP/build artifact to a GitHub Release if needed.
+## Credits, license, and remix permission
+These listing choices have not yet been established by existing project metadata. Do not assume that the game publishers' content is licensed for redistribution, and do not infer remix permission from the repository being public.
