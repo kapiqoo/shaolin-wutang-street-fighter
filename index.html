@@ -1,1 +1,81 @@
-
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shaolin vs Wutang: Crossover Arena</title>
+<style>
+:root{color-scheme:dark;--gold:#f7c65b;--red:#ff6262;--blue:#6ed7ff}
+*{box-sizing:border-box}body{margin:0;background:#101019;color:#f7f3e9;font-family:system-ui,-apple-system,Segoe UI,sans-serif;display:flex;justify-content:center;min-height:100vh;padding:18px}
+main{width:min(100%,1000px)}header{text-align:center;margin:0 0 12px}h1{font-size:clamp(1.35rem,4vw,2.35rem);margin:0;color:var(--gold);letter-spacing:.04em}header p{margin:5px 0;color:#c7c3d4}
+.hud{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin:10px 0}.fighter-label{font-weight:800;letter-spacing:.06em;margin-bottom:5px}.right{text-align:right}.health{height:17px;border:2px solid #eee4d2;background:#38232c;border-radius:4px;overflow:hidden}.health span{display:block;height:100%;width:100%;transition:width .12s;background:linear-gradient(90deg,#ed4646,#ffb25c)}.right .health span{margin-left:auto;background:linear-gradient(90deg,#54bfe9,#7be6c1)}#timer{font-size:1.65rem;font-weight:900;min-width:50px;text-align:center;color:var(--gold)}
+.arena{position:relative;border:2px solid #64506f;border-radius:10px;overflow:hidden;box-shadow:0 15px 45px #0008;background:#151525}canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;image-rendering:pixelated}
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;background:#090912c9;padding:22px}.panel{max-width:520px}.panel h2{color:var(--gold);font-size:clamp(1.5rem,4vw,2.3rem);margin:0 0 8px}.panel p{line-height:1.5;color:#e2dced}.hidden{display:none!important}
+button{border:0;border-radius:7px;background:var(--gold);color:#211629;font-weight:900;padding:11px 17px;cursor:pointer;font-size:1rem}button:hover{filter:brightness(1.1)}.secondary{background:#302b42;color:#f7f3e9;border:1px solid #716783}.actions{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin:12px 0}.instructions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}.card{background:#1a1928;border:1px solid #373148;border-radius:8px;padding:12px}.card strong{color:var(--gold)}.card p{margin:5px 0 0;color:#c8c2d5;font-size:.9rem;line-height:1.5}.foot{color:#928ca4;font-size:.8rem;text-align:center;margin:12px 0 0}
+@media(max-width:560px){body{padding:9px}.instructions{grid-template-columns:1fr}.hud{gap:6px}.fighter-label{font-size:.75rem}#timer{font-size:1.2rem;min-width:38px}.health{height:13px}}
+</style>
+</head>
+<body>
+<main>
+<header><h1>SHAOLIN vs WUTANG</h1><p>Crossover Arena · A fan-made, original-art browser prototype</p></header>
+<section class="hud" aria-label="Fight status">
+<div><div class="fighter-label">SHAOLIN MONK</div><div class="health"><span id="health1"></span></div></div>
+<div id="timer">60</div>
+<div class="right"><div class="fighter-label">WUTANG WARRIOR</div><div class="health"><span id="health2"></span></div></div>
+</section>
+<div class="arena">
+<canvas id="game" width="960" height="540" aria-label="Fighting game arena"></canvas>
+<div class="overlay" id="overlay"><div class="panel"><h2 id="overlayTitle">ENTER THE ARENA</h2><p id="overlayText">Two fighting traditions collide. Move, block with distance, and time your strikes to win the round.</p><div class="actions"><button id="startBtn">START FIGHT</button></div><p>Player 1: A / D move · W jump · F quick strike · G heavy strike</p><p>Player 2: ← / → move · ↑ jump · K quick strike · L heavy strike</p></div></div>
+</div>
+<div class="actions"><button id="restartBtn" class="secondary">RESTART ROUND</button><button id="cpuBtn" class="secondary">CPU OPPONENT: ON</button><button id="pauseBtn" class="secondary">PAUSE</button></div>
+<div class="instructions">
+<div class="card"><strong>PLAYER 1 · SHAOLIN</strong><p>A / D to move, W to jump, F for a fast strike, G for a powerful but slower strike.</p></div>
+<div class="card"><strong>PLAYER 2 · WUTANG</strong><p>Arrow keys to move, ↑ to jump, K for a fast strike, L for a powerful strike. Turn CPU off for two-player mode.</p></div>
+</div>
+<p class="foot">Original placeholder fighters and visuals only. This is an independent prototype, not an official game or affiliation with any existing franchise.</p>
+</main>
+<script>
+(function(){
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+const $=id=>document.getElementById(id);
+const W=canvas.width,H=canvas.height,FLOOR=440;
+let keys={},running=false,paused=false,cpu=true,frame=0,timeLeft=60,last=0,winner='',shake=0;
+const fighters=[];
+function makeFighter(id,x,color,accent,name,dir){return{id,x,y:FLOOR,w:56,h:112,color,accent,name,dir,hp:100,vx:0,vy:0,grounded:true,attack:0,attackType:'',cooldown:0,stun:0,flash:0,walk:0,blocking:false}}
+function reset(){fighters.length=0;fighters.push(makeFighter(1,245,'#df4e42','#ffd36b','SHAOLIN',1),makeFighter(2,715,'#277da8','#b9f3ff','WUTANG',-1));timeLeft=60;frame=0;winner='';running=false;paused=false;shake=0;updateHud();$('overlayTitle').textContent='ENTER THE ARENA';$('overlayText').textContent='Two fighting traditions collide. Land strikes, watch your timing, and win the round.';$('startBtn').textContent='START FIGHT';$('overlay').classList.remove('hidden');$('pauseBtn').textContent='PAUSE';draw()}
+function start(){if(winner)reset();running=true;paused=false;$('overlay').classList.add('hidden');$('pauseBtn').textContent='PAUSE';last=performance.now();requestAnimationFrame(loop)}
+function endRound(msg){running=false;winner=msg;$('overlayTitle').textContent=msg;$('overlayText').textContent='Press rematch to fight again, or change the CPU setting for a two-player duel.';$('startBtn').textContent='REMATCH';$('overlay').classList.remove('hidden')}
+function updateHud(){$('health1').style.width=Math.max(0,fighters[0]?.hp||0)+'%';$('health2').style.width=Math.max(0,fighters[1]?.hp||0)+'%';$('timer').textContent=Math.max(0,Math.ceil(timeLeft))}
+function attack(f,type){if(!running||paused||f.cooldown>0||f.stun>0)return;f.attack=type==='heavy'?24:15;f.attackType=type;f.cooldown=type==='heavy'?48:29}
+function input(f){if(f.stun>0){f.vx*=.82;return}let left=f.id===1?'KeyA':'ArrowLeft',right=f.id===1?'KeyD':'ArrowRight',jump=f.id===1?'KeyW':'ArrowUp';let speed=3.8;f.blocking=!!keys[f.id===1?'KeyS':'ArrowDown'];if(keys[left]){f.vx=-speed;f.dir=-1}else if(keys[right]){f.vx=speed;f.dir=1}else f.vx*=.68;if(keys[jump]&&f.grounded){f.vy=-12.5;f.grounded=false}if(keys[f.id===1?'KeyF':'KeyK'])attack(f,'quick');if(keys[f.id===1?'KeyG':'KeyL'])attack(f,'heavy')}
+function ai(f,other){let d=other.x-f.x;f.dir=d>=0?1:-1;if(f.stun>0)return;f.blocking=false;if(Math.abs(d)>100){f.vx=Math.sign(d)*2.7}else{f.vx*=.5;if(f.cooldown<=0&&Math.random()<.045)attack(f,Math.random()<.72?'quick':'heavy');if(Math.random()<.004&&f.grounded){f.vy=-11;f.grounded=false}}}
+function hitCheck(a,b){if(a.attack<=0)return;let reach=a.attackType==='heavy'?100:78;let dx=b.x-a.x;if(Math.abs(dx)<reach&&Math.abs((b.y-b.h/2)-(a.y-a.h/2))<100&&Math.sign(dx)===a.dir){if(a.attack=== (a.attackType==='heavy'?18:11)){let dmg=a.attackType==='heavy'?15:8;if(b.blocking)dmg=Math.ceil(dmg*.35);b.hp=Math.max(0,b.hp-dmg);b.stun=b.blocking?4:10;b.vx=a.dir*(a.attackType==='heavy'?7:4);b.flash=7;shake=5}}}
+function update(){if(!running||paused)return;frame++;if(frame%60===0)timeLeft--;let a=fighters[0],b=fighters[1];if(cpu)ai(b,a);else input(b);input(a);
+for(const f of fighters){f.x+=f.vx;f.y+=f.vy;f.vy+=.58;if(f.y>=FLOOR){f.y=FLOOR;f.vy=0;f.grounded=true}f.x=Math.max(40,Math.min(W-40,f.x));if(f.cooldown>0)f.cooldown--;if(f.attack>0)f.attack--;if(f.stun>0)f.stun--;if(f.flash>0)f.flash--;if(Math.abs(f.vx)>.3)f.walk+=.18}
+if(Math.abs(a.x-b.x)<65){let sign=Math.sign(a.x-b.x)||1;let overlap=(65-Math.abs(a.x-b.x))/2;a.x+=sign*overlap;b.x-=sign*overlap}
+hitCheck(a,b);hitCheck(b,a);updateHud();if(a.hp<=0)endRound('WUTANG WINS!');else if(b.hp<=0)endRound('SHAOLIN WINS!');else if(timeLeft<=0)endRound(a.hp===b.hp?'DRAW!':a.hp>b.hp?'SHAOLIN WINS!':'WUTANG WINS!')}
+function drawBackground(){let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#19182f');g.addColorStop(.65,'#41304f');g.addColorStop(1,'#15121f');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ctx.fillStyle='#f7c65b';ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(770,112,42,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+for(let i=0;i<7;i++){let x=i*155-25;ctx.fillStyle=i%2?'#272039':'#30233e';ctx.beginPath();ctx.moveTo(x,FLOOR-50);ctx.lineTo(x+55,FLOOR-205);ctx.lineTo(x+110,FLOOR-50);ctx.closePath();ctx.fill();ctx.fillStyle='#5d3d55';ctx.fillRect(x+38,FLOOR-110,34,60)}
+ctx.fillStyle='#1b1727';ctx.fillRect(0,FLOOR,W,H-FLOOR);ctx.strokeStyle='#776079';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,FLOOR);ctx.lineTo(W,FLOOR);ctx.stroke();for(let x=0;x<W;x+=80){ctx.strokeStyle='#382a40';ctx.beginPath();ctx.moveTo(x,FLOOR);ctx.lineTo(x+55,H);ctx.stroke()}}
+function drawFighter(f){let x=f.x,y=f.y,dir=f.dir,step=Math.sin(f.walk)*8;ctx.save();ctx.translate(x,y);ctx.scale(dir,1);ctx.globalAlpha=.24;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(0,4,43,10,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+let punch=f.attack>0?(f.attackType==='heavy'?48:30):0;ctx.strokeStyle=f.flash?'#fff':f.color;ctx.lineWidth=17;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-5,-52);ctx.lineTo(-12+step,-22);ctx.lineTo(-22-step,0);ctx.moveTo(6,-52);ctx.lineTo(13-step,-24);ctx.lineTo(25+step,0);ctx.stroke();
+ctx.fillStyle=f.color;ctx.fillRect(-21,-103,42,55);ctx.fillStyle=f.accent;ctx.fillRect(-22,-102,44,10);ctx.fillRect(-20,-66,40,7);
+ctx.fillStyle=f.flash?'#fff':'#d8a47f';ctx.beginPath();ctx.arc(0,-119,19,0,Math.PI*2);ctx.fill();ctx.fillStyle=f.accent;ctx.beginPath();ctx.moveTo(-20,-126);ctx.lineTo(-12,-145);ctx.lineTo(6,-137);ctx.lineTo(18,-145);ctx.lineTo(20,-124);ctx.closePath();ctx.fill();ctx.fillStyle='#191522';ctx.fillRect(4,-123,9,4);
+ctx.strokeStyle=f.flash?'#fff':f.color;ctx.lineWidth=14;ctx.beginPath();ctx.moveTo(-15,-90);ctx.lineTo(-28,-69);ctx.lineTo(-37,-54);ctx.stroke();ctx.beginPath();ctx.moveTo(15,-90);ctx.lineTo(25,-75);ctx.lineTo(35+punch,-75);ctx.stroke();ctx.fillStyle=f.accent;ctx.beginPath();ctx.arc(35+punch,-75,8,0,Math.PI*2);ctx.fill();
+if(f.attack>0){ctx.strokeStyle=f.attackType==='heavy'?'#ffe28a':'#b9f3ff';ctx.lineWidth=f.attackType==='heavy'?7:4;ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(37+punch,-75, f.attackType==='heavy'?34:24,-.9,.9);ctx.stroke();ctx.globalAlpha=1}
+if(f.blocking){ctx.strokeStyle='#a5f2ff';ctx.lineWidth=5;ctx.beginPath();ctx.arc(5,-77,40,-1.5,1.5);ctx.stroke()}
+ctx.restore();ctx.fillStyle='#fff';ctx.font='bold 14px system-ui';ctx.textAlign='center';ctx.fillText(f.name,x,FLOOR+28)}
+function draw(){ctx.save();if(shake>0){ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);shake*=.8}drawBackground();fighters.forEach(drawFighter);ctx.restore();ctx.fillStyle='#ffffffaa';ctx.font='bold 13px system-ui';ctx.textAlign='left';ctx.fillText('ROUND 1',18,25);ctx.textAlign='right';ctx.fillText(cpu?'CPU DUEL':'2 PLAYER DUEL',W-18,25)}
+function loop(now){if(!running)return;let dt=now-last;last=now;if(dt>0){update();draw()}if(running)requestAnimationFrame(loop)}
+window.addEventListener('keydown',e=>{const blocked=['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space'];if(blocked.includes(e.code))e.preventDefault();keys[e.code]=true;if(e.code==='Escape'&&running){paused=!paused;if(paused){running=false;$('pauseBtn').textContent='RESUME';$('overlayTitle').textContent='PAUSED';$('overlayText').textContent='Take a breath. Resume when ready.';$('startBtn').textContent='RESUME';$('overlay').classList.remove('hidden')}else start()}});
+window.addEventListener('keyup',e=>keys[e.code]=false);
+$('startBtn').addEventListener('click',()=>{if(paused){paused=false;start()}else start()});
+$('restartBtn').addEventListener('click',()=>{reset();start()});
+$('pauseBtn').addEventListener('click',()=>{if(!running&&!paused)return;if(running){running=false;paused=true;$('overlayTitle').textContent='PAUSED';$('overlayText').textContent='Resume the duel when you are ready.';$('startBtn').textContent='RESUME';$('overlay').classList.remove('hidden');$('pauseBtn').textContent='RESUME'}else{paused=false;start()}});
+$('cpuBtn').addEventListener('click',()=>{cpu=!cpu;$('cpuBtn').textContent='CPU OPPONENT: '+(cpu?'ON':'OFF')});
+reset();
+})();
+</script>
+</body>
+</html>
